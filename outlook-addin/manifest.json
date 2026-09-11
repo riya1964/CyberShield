@@ -1,0 +1,95 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "cybershield-outlook-addin-001",
+  "packageName": "com.cybershield.outlookaddin",
+  "developer": {
+    "name": "CyberShield Security",
+    "websiteUrl": "https://your-cybershield-domain.com",
+    "privacyUrl": "https://your-cybershield-domain.com/privacy",
+    "termsOfUseUrl": "https://your-cybershield-domain.com/terms"
+  },
+  "icons": {
+    "color": "icon-color.png",
+    "outline": "icon-outline.png"
+  },
+  "name": {
+    "short": "CyberShield",
+    "full": "CyberShield Phishing Reporter"
+  },
+  "description": {
+    "short": "Report suspicious emails to your security team",
+    "full": "CyberShield Outlook Add-in allows employees to report suspicious phishing emails directly from their inbox with one click. The reported email is logged in the CyberShield platform for security analysis."
+  },
+  "accentColor": "#1a1a2e",
+  "extensions": [
+    {
+      "requirements": {
+        "scopes": ["mail"],
+        "capabilities": [
+          { "name": "Mailbox", "minVersion": "1.1" }
+        ]
+      },
+      "runtimes": [
+        {
+          "requirements": {
+            "capabilities": [{ "name": "Mailbox", "minVersion": "1.3" }]
+          },
+          "id": "TaskPaneRuntime",
+          "type": "general",
+          "code": {
+            "page": "https://your-cybershield-domain.com/outlook/taskpane.html"
+          },
+          "lifetime": "short",
+          "actions": [
+            {
+              "id": "TaskPaneRuntimeShow",
+              "type": "openPage",
+              "pinnable": false,
+              "view": "dashboard"
+            }
+          ]
+        }
+      ],
+      "ribbons": [
+        {
+          "contexts": ["mailRead"],
+          "tabs": [
+            {
+              "builtInTabId": "TabDefault",
+              "groups": [
+                {
+                  "id": "cybershield-group",
+                  "label": "CyberShield",
+                  "icons": [
+                    { "size": 16, "file": "icon-16.png" },
+                    { "size": 32, "file": "icon-32.png" },
+                    { "size": 80, "file": "icon-80.png" }
+                  ],
+                  "controls": [
+                    {
+                      "id": "reportPhishing",
+                      "type": "button",
+                      "label": "Report Phishing",
+                      "icons": [
+                        { "size": 16, "file": "icon-16.png" },
+                        { "size": 32, "file": "icon-32.png" },
+                        { "size": 80, "file": "icon-80.png" }
+                      ],
+                      "supertip": {
+                        "title": "Report Suspicious Email",
+                        "description": "Report this email as a phishing attempt to your security team"
+                      },
+                      "actionId": "TaskPaneRuntimeShow"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

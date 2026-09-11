@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberShield — Report Phishing</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+  body { background: #f5f5f5; padding: 16px; }
+  .header { background: #1a1a2e; color: #fff; padding: 14px 16px; border-radius: 8px; margin-bottom: 16px; }
+  .header h1 { font-size: 16px; font-weight: 600; }
+  .header p { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+  .card { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid #e0e0e0; }
+  .card h2 { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 8px; }
+  .email-info { font-size: 12px; color: #666; line-height: 1.6; }
+  .email-info strong { color: #333; }
+  .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+  .btn-danger { background: #c0392b; color: #fff; }
+  .btn-danger:hover { background: #a93226; }
+  .btn-secondary { background: #f0f0f0; color: #333; }
+  .btn-secondary:hover { background: #e0e0e0; }
+  .status { padding: 12px; border-radius: 6px; font-size: 13px; display: none; margin-top: 12px; }
+  .status.success { background: #d1e7dd; color: #155724; display: block; }
+  .status.error { background: #f8d7da; color: #842029; display: block; }
+  .loading { text-align: center; color: #666; font-size: 13px; padding: 20px; }
+  .tips { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 12px; margin-top: 12px; }
+  .tips h3 { font-size: 12px; font-weight: 600; color: #856404; margin-bottom: 6px; }
+  .tips ul { font-size: 11px; color: #856404; padding-left: 16px; line-height: 1.8; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🛡️ CyberShield</h1>
+  <p>Phishing Report Tool</p>
+</div>
+
+<div id="loading" class="loading">Loading email details...</div>
+
+<div id="main-content" style="display:none">
+  <div class="card">
+    <h2>Current Email</h2>
+    <div class="email-info">
+      <strong>From:</strong> <span id="email-from">—</span><br>
+      <strong>Subject:</strong> <span id="email-subject">—</span><br>
+      <strong>Date:</strong> <span id="email-date">—</span>
+    </div>
+  </div>
+
+  <button class="btn btn-danger" onclick="reportPhishing()">
+    🚩 Report as Phishing
+  </button>
+  <button class="btn btn-secondary" onclick="markSafe()">
+    ✅ This email is safe
+  </button>
+
+  <div id="status-msg" class="status"></div>
+
+  <div class="tips">
+    <h3>Phishing Warning Signs</h3>
+    <ul>
+      <li>Urgent or threatening language</li>
+      <li>Suspicious sender domain</li>
+      <li>Unexpected attachments or links</li>
+      <li>Requests for credentials or payment</li>
+      <li>Poor grammar or formatting</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+// CyberShield server URL
+const CYBERSHIELD_URL = "https://your-cybershield-domain.com/cybershield";
+
+Office.onReady(function(info) {
+  if (info.host === Office.HostType.Outlook) {
+    loadEmailDetails();
+  }
+});
+
+function loadEmailDetails() {
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("main-content").style.display = "block";
+
+  const item = Office.context.mailbox.item;
+  document.getElementById("email-from").textContent =
+    item.from ? item.from.displayName + " <" + item.from.emailAddress + ">" : "Unknown";
+  document.getElementById("email-subject").textContent = item.subject || "No subject";
+  document.getElementById("email-date").textContent =
+    item.dateTimeCreated ? new Date(item.dateTimeCreated).toLocaleString() : "Unknown";
+}
+
+function reportPhishing() {
+  const item = Office.context.mailbox.item;
+  const statusEl = document.getElementById("status-msg");
+
+  // Extract email details
+  const reportData = {
+    from_email: item.from ? item.from.emailAddress : "",
+    from_name: item.from ? item.from.displayName : "",
+    subject: item.subject || "",
+    reported_by: Office.context.mailbox.userProfile.emailAddress,
+    reported_at: new Date().toISOString(),
+    internet_message_id: item.internetMessageId || ""
+  };
+
+  // Check agar ye CyberShield simulation hai
+  // (Simulation emails me tracking token hota hai)
+  item.body.getAsync(Office.CoercionType.Html, function(result) {
+    if (result.status === Office.AsyncResultStatus.Succeeded) {
+      const body = result.value;
+
+      // Tracking token extract karo (agar simulation email hai)
+      const tokenMatch = body.match(/uid=([a-f0-9-]{36})/);
+      if (tokenMatch) {
+        const token = tokenMatch[1];
+        // CyberShield simulation report endpoint call karo
+        fetch(`${CYBERSHIELD_URL}/report_phish.php?uid=${token}`)
+          .then(r => r.text())
+          .then(() => {
+            showStatus("success",
+              "Great catch! This was a CyberShield phishing simulation. You correctly identified and reported it. +3 to your security score!");
+          })
+          .catch(() => {
+            // Fallback: general report
+            sendGeneralReport(reportData, statusEl);
+          });
+      } else {
+        // Real suspicious email — security team ko report karo
+        sendGeneralReport(reportData, statusEl);
+      }
+    }
+  });
+}
+
+function sendGeneralReport(data, statusEl) {
+  fetch(`${CYBERSHIELD_URL}/report_external.php`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  })
+  .then(r => r.json())
+  .then(result => {
+    showStatus("success",
+      "Reported! Our security team has been notified. Thank you for helping keep the organization safe.");
+  })
+  .catch(err => {
+    showStatus("error", "Could not send report. Please forward this email to security@company.com manually.");
+  });
+}
+
+function markSafe() {
+  showStatus("success", "Noted. If you change your mind, use the Report Phishing button.");
+}
+
+function showStatus(type, message) {
+  const el = document.getElementById("status-msg");
+  el.className = `status ${type}`;
+  el.textContent = message;
+}
+</script>
+</body>
+</html>
