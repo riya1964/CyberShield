@@ -42,7 +42,7 @@ if (isset($_GET['action'], $_GET['cid'])) {
         'wa'       => "/home/kali/cybershield-engine/multichannel_bot.py --wa $cid",
         'wabot'    => "/home/kali/cybershield-engine/wa_chatbot.py --campaign $cid",
         'deepfake' => "/home/kali/cybershield-engine/deepfake_voice.py --campaign $cid",
-        'qr'       => "/home/kali/cybershield-engine/quishing_engine.py --campaign $cid",
+        'qr'       => "/home/kali/cybershield-engine/quishing_engine.py $cid",
     ];
     if (isset($map[$action])) {
         shell_exec("$python {$map[$action]} 2>&1");

@@ -86,4 +86,6 @@ def generate_qr_for_campaign(campaign_id):
 
 
 if __name__ == "__main__":
-    generate_qr_for_campaign(1)
+    import sys
+    cid = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+    generate_qr_for_campaign(cid)

@@ -91,11 +91,11 @@ def dispatch_campaign(campaign_id):
 
 
 if __name__ == "__main__":
-    # Test run: pehle connection check karo
+    import sys
     conn = get_connection()
     if conn:
         conn.close()
-
-    # Phir dispatch test karo (campaign_id = 1 abhi sirf placeholder hai,
-    # actual campaign campaigns table me pehle create karna hoga)
-    # dispatch_campaign(1)
+    if len(sys.argv) > 1:
+        dispatch_campaign(int(sys.argv[1]))
+    else:
+        print("[ERROR] Campaign ID do: python3 dispatcher.py <campaign_id>")
