@@ -1,5 +1,7 @@
 <?php
+ini_set("session.save_path", "/tmp");
 session_start();
+ob_start();
 require "db_connect.php";
 
 $token       = $_GET['uid'] ?? $_POST['uid'] ?? $_SESSION['token'] ?? null;
@@ -44,13 +46,13 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['q1'])) {
     $_SESSION['quiz_token']   = $token;
 
     $score_pct = round(($score/20)*100);
-    $status = $score_pct>=70 ? 'completed' : 'failed';
+    $status = $score_pct>=70 ? 'completed' : 'in_progress';
     if ($target_id && $campaign_id) {
         $update = $conn->prepare("UPDATE lms_training SET status=?, quiz_score=?, completed_at=NOW() WHERE target_id=? AND campaign_id=?");
         $update->bind_param("siii", $status, $score_pct, $target_id, $campaign_id);
         $update->execute(); $update->close();
     }
-    $view = 'result';
+    $view = 'result'; header('Location: result.php?uid=' . urlencode($token ?? '') . '&score=' . $score . '&total=20'); exit;
 }
 // Review page
 elseif (isset($_GET['view']) && $_GET['view']==='review') {
@@ -245,7 +247,7 @@ $questions = [
     </div>
   </div>
 
-  <form method="POST">
+  <form method="POST" action="quiz.php?uid=<?php echo urlencode($token??''); ?>">
     <input type="hidden" name="uid" value="<?php echo htmlspecialchars($token??''); ?>">
     <?php $qnum=1; foreach ($questions as $qid=>$q): ?>
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-4">
